@@ -10,17 +10,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4   # ✅ updated
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5   # ✅ updated
         with:
-          python-version: 3.10
+          python-version: '3.10'        # ✅ correct version
 
-      - name: Install minimal dependencies
+      - name: Install dependencies
         run: |
           pip install pandas numpy scikit-learn xgboost fastapi uvicorn
 
-      - name: Basic sanity check
+      - name: Run basic test
         run: |
-          python -c "print('CI working fine')"
+          python -c "print('CI pipeline working')"
