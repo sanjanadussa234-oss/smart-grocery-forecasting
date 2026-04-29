@@ -5,3 +5,4 @@ xgboost
 fastapi
 uvicorn
 joblib
+streamlit

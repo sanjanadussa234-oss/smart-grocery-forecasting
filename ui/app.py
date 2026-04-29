@@ -43,6 +43,9 @@ if st.button("Predict Demand"):
         "dow_cos": 0
     }
 
-    response = requests.post("http://127.0.0.1:8000/predict", json=payload)
+    response = requests.post(
+    "https://smart-grocery-api-edob.onrender.com/predict",
+    json=payload
+)
 
     st.success(f"Predicted Demand: {response.json()['predicted_demand']}")
