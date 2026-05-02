@@ -73,33 +73,52 @@ def home():
 # -----------------------
 from fastapi import HTTPException
 
+import pandas as pd
+from datetime import datetime
+import os
+
 @app.post("/predict")
 def predict(data: InputData):
     try:
-        df = pd.DataFrame([data.dict()])
+        input_dict = data.dict()
 
-        # align feature order
-        df = df.reindex(columns=feature_columns, fill_value=0)
+        # Convert to dataframe
+        df = pd.DataFrame([input_dict])
 
+        # Prediction
         prediction = model.predict(df)[0]
 
-        # logging
-        log_prediction(
-            store_id=data.store_id_enc,
-            item_id=data.item_id_enc,
-            prediction=float(prediction),
-            input_data=data.dict()
-        )
-
-        return {
+        # =========================
+        # 🔥 LOGGING (IMPORTANT)
+        # =========================
+        log_data = {
+            "timestamp": datetime.now(),
+            "store_id": input_dict["store_id_enc"],
+            "item_id": input_dict["item_id_enc"],
+            "price": input_dict["price"],
+            "discount_pct": input_dict["discount_pct"],
+            "promotion": input_dict["promotion"],
+            "lag_1": input_dict["lag_1"],
+            "lag_7": input_dict["lag_7"],
             "predicted_demand": float(prediction)
         }
 
+        log_df = pd.DataFrame([log_data])
+
+        log_file = "logs/predictions.csv"
+
+        # Create logs folder if not exists
+        os.makedirs("logs", exist_ok=True)
+
+        if os.path.exists(log_file):
+            log_df.to_csv(log_file, mode='a', header=False, index=False)
+        else:
+            log_df.to_csv(log_file, index=False)
+
+        return {"predicted_demand": float(prediction)}
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prediction failed: {str(e)}"
-        )
+        return {"error": str(e)}
 def log_prediction(store_id, item_id, prediction, input_data):
     os.makedirs("logs", exist_ok=True)
 
