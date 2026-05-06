@@ -1,82 +1,125 @@
 # src/feature_engineering.py
 
 import pandas as pd
-import numpy as np
+import os
+import joblib
+from sklearn.preprocessing import LabelEncoder
+
+# -------------------------
+# Paths
+# -------------------------
+INPUT_PATH = "data/new_processed/cleaned_data.csv"
+FEATURED_DIR = "data/new_featured/"
+
+OUTPUT_PATH = FEATURED_DIR + "featured_data.csv"
+
+ITEM_ENCODER_PATH = FEATURED_DIR + "item_encoder.pkl"
+CATEGORY_ENCODER_PATH = FEATURED_DIR + "category_encoder.pkl"
+FESTIVAL_ENCODER_PATH = FEATURED_DIR + "festival_encoder.pkl"
+
+os.makedirs(FEATURED_DIR, exist_ok=True)
 
 
-def create_features(path):
-    print("📥 Loading processed dataset...")
+def feature_engineering():
+    print("Loading cleaned data...")
+    df = pd.read_csv(INPUT_PATH)
 
-    df = pd.read_csv(path, parse_dates=["date"])
+    print("Applying feature engineering...")
 
-    # -----------------------------------
-    # 1. SORT DATA (VERY IMPORTANT)
-    # -----------------------------------
-    df = df.sort_values(["store_id_enc", "item_id_enc", "date"]).reset_index(drop=True)
+    # -------------------------
+    # Convert date
+    # -------------------------
+    df['date'] = pd.to_datetime(df['date'])
 
-    # -----------------------------------
-    # 2. LAG FEATURES
-    # -----------------------------------
-    print("⚙️ Creating lag features...")
+    # -------------------------
+    # Encoding categorical variables
+    # -------------------------
+    le_item = LabelEncoder()
+    df['item_encoded'] = le_item.fit_transform(df['item_id'])
 
-    df["lag_1"] = df.groupby(["store_id_enc", "item_id_enc"])["sales_units"].shift(1)
-    df["lag_7"] = df.groupby(["store_id_enc", "item_id_enc"])["sales_units"].shift(7)
-    df["lag_14"] = df.groupby(["store_id_enc", "item_id_enc"])["sales_units"].shift(14)
+    le_category = LabelEncoder()
+    df['category_encoded'] = le_category.fit_transform(df['category'])
 
-    # -----------------------------------
-    # 3. ROLLING FEATURES
-    # -----------------------------------
-    print("📈 Creating rolling features...")
+    le_festival = LabelEncoder()
+    df['festival_encoded'] = le_festival.fit_transform(df['festival'])
 
-    df["rolling_mean_7"] = df.groupby(["store_id_enc", "item_id_enc"])["sales_units"] \
-        .transform(lambda x: x.shift(1).rolling(window=7).mean())
+    # Save encoders
+    joblib.dump(le_item, ITEM_ENCODER_PATH)
+    joblib.dump(le_category, CATEGORY_ENCODER_PATH)
+    joblib.dump(le_festival, FESTIVAL_ENCODER_PATH)
 
-    df["rolling_std_7"] = df.groupby(["store_id_enc", "item_id_enc"])["sales_units"] \
-        .transform(lambda x: x.shift(1).rolling(window=7).std())
+    # -------------------------
+    # Time features
+    # -------------------------
+    df['day'] = df['date'].dt.day
+    df['month'] = df['date'].dt.month
+    df['year'] = df['date'].dt.year
+    df['weekofyear'] = df['date'].dt.isocalendar().week.astype(int)
 
-    # -----------------------------------
-    # 4. PRICE FEATURES
-    # -----------------------------------
-    print("💰 Creating price features...")
+    # -------------------------
+    # Sort for lag features
+    # -------------------------
+    df = df.sort_values(by=['store_id', 'item_id', 'date'])
 
-    df["price_diff"] = df["base_price"] - df["price"]
-    df["price_ratio"] = df["price"] / (df["base_price"] + 1e-5)
+    # -------------------------
+    # Lag features
+    # -------------------------
+    df['lag_1'] = df.groupby(['store_id', 'item_id'])['sales_units'].shift(1)
+    df['lag_7'] = df.groupby(['store_id', 'item_id'])['sales_units'].shift(7)
 
-    # -----------------------------------
-    # 5. PROMOTION EFFECT
-    # -----------------------------------
-    df["promo_effect"] = df["promotion"] * df["discount_pct"]
+    # -------------------------
+    # Rolling mean feature
+    # -------------------------
+    df['rolling_mean_7'] = df.groupby(['store_id', 'item_id'])['sales_units'] \
+                            .transform(lambda x: x.rolling(7).mean())
 
-    # -----------------------------------
-    # 6. CYCLICAL FEATURES (FIXED)
-    # -----------------------------------
-    print("📅 Creating seasonal features...")
+    # -------------------------
+    # Handle missing values
+    # -------------------------
+    df.fillna(0, inplace=True)
 
-    df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
-    df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
+    # -------------------------
+    # Select only model features
+    # -------------------------
+    FEATURE_COLUMNS = [
+        'store_id',
+        'item_encoded',
+        'category_encoded',
+        'festival_encoded',
+        'price',
+        'base_price',
+        'discount_pct',
+        'promotion',
+        'day_of_week',
+        'month',
+        'weekofyear',
+        'lag_1',
+        'lag_7',
+        'rolling_mean_7',
+        'temperature_c',
+        'rainfall_mm',
+        'humidity_pct'
+    ]
 
-    df["dow_sin"] = np.sin(2 * np.pi * df["day_of_week"] / 7)
-    df["dow_cos"] = np.cos(2 * np.pi * df["day_of_week"] / 7)
+    TARGET = 'sales_units'
 
-    # -----------------------------------
-    # 7. DROP NaN ROWS (FROM LAGS)
-    # -----------------------------------
-    print("🧹 Dropping NaN rows...")
+    df_model = df[FEATURE_COLUMNS + [TARGET]]
 
-    df = df.dropna().reset_index(drop=True)
+    # -------------------------
+    # Debug: Check final columns
+    # -------------------------
+    print("Final columns used for model:")
+    print(df_model.columns)
 
-    # -----------------------------------
-    # FINAL INFO
-    # -----------------------------------
-    print("\nFinal Shape after feature engineering:", df.shape)
-    print("\nSample Data:\n", df.head())
+    # -------------------------
+    # Save final dataset
+    # -------------------------
+    df_model.to_csv(OUTPUT_PATH, index=False)
 
-    return df
+    print("✅ Feature engineering complete.")
+    print(f"Saved featured data → {OUTPUT_PATH}")
+    print("Encoders saved in data/new_featured/")
 
 
 if __name__ == "__main__":
-    df = create_features("data/processed/grocery_clean.csv")
-
-    df.to_csv("data/processed/grocery_features.csv", index=False)
-
-    print("\n✅ Feature Engineering Completed Successfully!")
+    feature_engineering()

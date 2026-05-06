@@ -1,135 +1,119 @@
+# mlops/monitor.py
+
 import pandas as pd
 import numpy as np
-
-# =========================
-# LOAD DATA
-# =========================
-pred = pd.read_csv("logs/predictions.csv")
-actual = pd.read_csv("logs/actuals.csv")
-
-print("\n📊 DATA LOADED")
-
-# =========================
-# DATETIME
-# =========================
-pred["timestamp"] = pd.to_datetime(pred["timestamp"])
-actual["timestamp"] = pd.to_datetime(actual["timestamp"])
-
-pred["time_key"] = pred["timestamp"].dt.floor("h")
-actual["time_key"] = actual["timestamp"].dt.floor("h")
-
-# =========================
-# MERGE
-# =========================
-merged = pd.merge(
-    pred,
-    actual,
-    on=["store_id", "item_id", "time_key"],
-    how="inner"
-)
-
-print(f"🔗 Merged records: {len(merged)}")
-
-if len(merged) == 0:
-    print("⚠️ No matching records")
-    exit()
-
-# =========================
-# ERROR
-# =========================
-merged["error"] = merged["actual_sales"] - merged["predicted_demand"]
-merged["abs_error"] = np.abs(merged["error"])
-
-# =========================
-# PERFORMANCE
-# =========================
-rmse = np.sqrt(np.mean(merged["error"] ** 2))
-mae = np.mean(merged["abs_error"])
-
-print("\n📈 MODEL PERFORMANCE")
-print(f"RMSE: {rmse:.3f}")
-print(f"MAE: {mae:.3f}")
-
-# =========================
-# AUTO RETRAIN TRIGGER
-# =========================
 import os
+
+print("\n📊 MLOps Monitoring Started")
+
+
+# =========================
+# PIPELINES
+# =========================
+pipelines = [
+    ("logs/single_predictions.csv", "logs/single_actuals.csv", "SINGLE"),
+    ("logs/festival_predictions.csv", "logs/festival_actuals.csv", "FESTIVAL")
+]
+
 
 THRESHOLD = 10
 
-if rmse > THRESHOLD:
-    print("\n🚨 Triggering retraining pipeline...")
-    os.system("python mlops/retrain.py")
-else:
-    print("\n✅ No retraining needed")
 
 # =========================
-# ROLLING RMSE (fixed)
+# PROCESS EACH PIPELINE
 # =========================
-window = min(10, len(merged))  # avoids NaN issue
-merged = merged.sort_values("timestamp_x")
-merged = merged.drop(columns=["timestamp_x", "timestamp_y"])
+for pred_path, actual_path, name in pipelines:
 
-merged["rolling_rmse"] = (
-    merged["error"] ** 2
-).rolling(window).mean().apply(np.sqrt)
+    if not os.path.exists(pred_path) or not os.path.exists(actual_path):
+        print(f"⚠️ Missing files for {name}")
+        continue
 
-latest_rmse = merged["rolling_rmse"].iloc[-1]
+    print(f"\n🔍 Monitoring {name} pipeline")
 
-print("\n📉 DRIFT CHECK (ROLLING RMSE)")
-print(f"Latest Rolling RMSE: {latest_rmse:.3f}")
+    pred = pd.read_csv(pred_path)
+    actual = pd.read_csv(actual_path)
 
-# =========================
-# FEATURE DRIFT CHECK
-# =========================
-print("\n📊 FEATURE DRIFT CHECK")
+    if len(pred) == 0 or len(actual) == 0:
+        print("⚠️ Empty data")
+        continue
 
-features = ["price", "discount_pct", "promotion", "lag_1", "lag_7"]
+    # -------------------------
+    # Convert time
+    # -------------------------
+    pred["timestamp"] = pd.to_datetime(pred["timestamp"])
+    actual["timestamp"] = pd.to_datetime(actual["timestamp"])
 
-for col in features:
-    if col in pred.columns:
-        mean_val = pred[col].mean()
-        std_val = pred[col].std()
-        print(f"{col}: mean={mean_val:.2f}, std={std_val:.2f}")
+    pred["time_key"] = pred["timestamp"].dt.floor("h")
+    actual["time_key"] = actual["timestamp"].dt.floor("h")
 
-# =========================
-# ANOMALY DETECTION
-# =========================
-error_mean = merged["error"].mean()
-error_std = merged["error"].std()
+    # -------------------------
+    # Merge
+    # -------------------------
+    merged = pd.merge(
+        pred,
+        actual,
+        on=["store_id", "item_id", "time_key"],
+        how="inner"
+    )
 
-merged["z_score"] = (merged["error"] - error_mean) / error_std
+    if len(merged) == 0:
+        print("⚠️ No matching records")
+        continue
 
-anomalies = merged[np.abs(merged["z_score"]) > 3]
+    # -------------------------
+    # ERROR METRICS
+    # -------------------------
+    merged["error"] = merged["actual_sales"] - merged["predicted_demand"]
 
-print("\n🚨 ANOMALY DETECTION")
-print(f"Anomalies found: {len(anomalies)}")
+    rmse = np.sqrt(np.mean(merged["error"] ** 2))
+    mae = np.mean(np.abs(merged["error"]))
 
-# =========================
-# TREND ANALYSIS
-# =========================
-print("\n📈 PREDICTION TREND")
+    print(f"\n📈 {name} PERFORMANCE")
+    print(f"RMSE: {rmse:.3f}")
+    print(f"MAE: {mae:.3f}")
 
-trend = pred["predicted_demand"].tail(10).values
+    # -------------------------
+    # DRIFT CHECK
+    # -------------------------
+    merged = merged.sort_values("timestamp")
 
-if len(trend) >= 2:
-    if trend[-1] > trend[0]:
-        print("⬆️ Demand increasing")
-    elif trend[-1] < trend[0]:
-        print("⬇️ Demand decreasing")
+    window = min(10, len(merged))
+
+    merged["rolling_rmse"] = (
+        merged["error"] ** 2
+    ).rolling(window).mean().apply(np.sqrt)
+
+    latest_rmse = merged["rolling_rmse"].iloc[-1]
+
+    print(f"📉 Rolling RMSE: {latest_rmse:.3f}")
+
+    # -------------------------
+    # ANOMALY CHECK
+    # -------------------------
+    if merged["error"].std() != 0:
+        z = (merged["error"] - merged["error"].mean()) / merged["error"].std()
+        anomalies = merged[np.abs(z) > 3]
     else:
-        print("➡️ Stable demand")
+        anomalies = []
 
-# =========================
-# TOP ITEM ERROR
-# =========================
-print("\n📦 TOP ITEM ERROR")
+    print(f"🚨 Anomalies: {len(anomalies)}")
 
-top_items = (
-    merged.groupby("item_id")
-    .agg({"abs_error": "mean"})
-    .sort_values("abs_error", ascending=False)
-    .head(5)
-)
+    # -------------------------
+    # RETRAIN TRIGGER
+    # -------------------------
+    if rmse > THRESHOLD:
+        print(f"🚨 Retraining triggered for {name}")
+        os.system("python mlops/retrain.py")
+    else:
+        print(f"✅ {name} model is healthy")
+    
+    # =========================
+    # DRIFT DECISION SIGNAL
+    # =========================
 
-print(top_items)
+    DRIFT_THRESHOLD = 10
+
+    if rmse > DRIFT_THRESHOLD:
+        print("\n🚨 DRIFT DETECTED → RETRAIN")
+    else:
+        print("\n✅ NO DRIFT → STABLE MODEL")

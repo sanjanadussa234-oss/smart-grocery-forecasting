@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import joblib
@@ -6,6 +7,7 @@ import mlflow
 import mlflow.xgboost
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from xgboost import XGBRegressor
+print("\n♻️ AUTO-RETRAINING TRIGGERED BY MLOPS PIPELINE")
 
 # =========================
 # SET MLFLOW EXPERIMENT
@@ -68,7 +70,7 @@ print("🚨 Retraining model...")
 # =========================
 # LOAD FULL DATASET
 # =========================
-data = pd.read_csv("data/grocery_features.csv")
+data = pd.read_csv("data/new_featured/featured_data.csv")
 
 # =========================
 # FEATURES
@@ -123,7 +125,16 @@ with mlflow.start_run():
     # =========================
     # SAVE MODEL LOCALLY
     # =========================
-    joblib.dump(model, "models/xgboost_model.pkl")
+    # joblib.dump(model, "models/xgboost_model.pkl")
+    from datetime import datetime
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    model_path = f"models/xgboost_{timestamp}.pkl"
+
+    joblib.dump(model, model_path)
+
+    # Optional: update latest pointer
+    joblib.dump(model, "models/xgboost_latest.pkl")
 
     print("✅ Model retrained and saved!")
     print(f"📊 Train RMSE: {train_rmse:.3f}")

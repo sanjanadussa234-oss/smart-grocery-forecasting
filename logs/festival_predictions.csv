@@ -1,0 +1,54 @@
+timestamp,store_id,item_id,item_name,category,festival,predicted_demand,discount_pct,promotion
+2026-05-05T19:51:52.711513,1,I043,curd,dairy,new year,508.99,15.0,1
+2026-05-05T19:51:52.711526,1,I096,dried fruit,snacks,new year,469.24,15.0,1
+2026-05-05T19:51:52.711527,1,I100,pretzels,snacks,new year,442.89,15.0,1
+2026-05-05T19:51:52.711529,1,I097,granola,snacks,new year,418.99,15.0,1
+2026-05-05T19:51:52.711530,1,I098,cereal,snacks,new year,198.91,15.0,1
+2026-05-05T19:57:55.030917,1,I043,curd,dairy,new year,508.99,15.0,1
+2026-05-05T19:57:55.030925,1,I096,dried fruit,snacks,new year,469.24,15.0,1
+2026-05-05T19:57:55.030926,1,I100,pretzels,snacks,new year,442.89,15.0,1
+2026-05-05T19:57:55.030928,1,I097,granola,snacks,new year,418.99,15.0,1
+2026-05-05T19:57:55.030929,1,I098,cereal,snacks,new year,198.91,15.0,1
+2026-05-05T20:00:07.555548,1,I043,curd,dairy,new year,508.99,15.0,1
+2026-05-05T20:00:07.555556,1,I096,dried fruit,snacks,new year,469.24,15.0,1
+2026-05-05T20:00:07.555558,1,I100,pretzels,snacks,new year,442.89,15.0,1
+2026-05-05T20:00:07.555559,1,I097,granola,snacks,new year,418.99,15.0,1
+2026-05-05T20:00:07.555560,1,I098,cereal,snacks,new year,198.91,15.0,1
+2026-05-05T20:00:07.980417,2,I097,granola,snacks,diwali,527.76,25.0,2
+2026-05-05T20:00:07.980425,2,I098,cereal,snacks,diwali,525.08,25.0,2
+2026-05-05T20:00:07.980427,2,I096,dried fruit,snacks,diwali,519.81,25.0,2
+2026-05-05T20:00:07.980428,2,I094,popcorn,snacks,diwali,510.29,25.0,2
+2026-05-05T20:00:07.980429,2,I100,pretzels,snacks,diwali,489.68,25.0,2
+2026-05-05T20:00:07.980430,2,I032,coconut,fruits,diwali,330.37,25.0,2
+2026-05-05T20:00:08.371914,3,I098,cereal,snacks,christmas,489.31,20.0,1
+2026-05-05T20:00:08.371923,3,I096,dried fruit,snacks,christmas,466.03,20.0,1
+2026-05-05T20:00:08.371924,3,I043,curd,dairy,christmas,440.77,20.0,1
+2026-05-05T20:00:08.371925,3,I094,popcorn,snacks,christmas,379.71,20.0,1
+2026-05-05T20:00:08.371926,3,I097,granola,snacks,christmas,309.85,20.0,1
+2026-05-06T18:13:57.049861,0,I098,cereal,snacks,diwali,136.83,0.0,0
+2026-05-06T18:13:57.049890,0,I097,granola,snacks,diwali,136.33,0.0,0
+2026-05-06T18:13:57.049891,0,I096,dried fruit,snacks,diwali,136.33,0.0,0
+2026-05-06T18:13:57.049893,0,I094,popcorn,snacks,diwali,130.61,0.0,0
+2026-05-06T18:13:57.049894,0,I100,pretzels,snacks,diwali,130.09,0.0,0
+2026-05-06T18:13:57.049895,0,I032,coconut,fruits,diwali,100.29,0.0,0
+2026-05-06T18:14:06.758239,0,I098,cereal,snacks,christmas,126.97,0.0,0
+2026-05-06T18:14:06.758281,0,I097,granola,snacks,christmas,126.47,0.0,0
+2026-05-06T18:14:06.758282,0,I096,dried fruit,snacks,christmas,126.47,0.0,0
+2026-05-06T18:14:06.758283,0,I094,popcorn,snacks,christmas,120.75,0.0,0
+2026-05-06T18:14:06.758285,0,I100,pretzels,snacks,christmas,120.23,0.0,0
+2026-05-06T18:14:06.758286,0,I043,curd,dairy,christmas,96.16,0.0,0
+2026-05-06T18:18:29.132459,0,I098,cereal,snacks,diwali,136.83,0.0,0
+2026-05-06T18:18:29.132471,0,I097,granola,snacks,diwali,136.33,0.0,0
+2026-05-06T18:18:29.132473,0,I096,dried fruit,snacks,diwali,136.33,0.0,0
+2026-05-06T18:18:29.132475,0,I094,popcorn,snacks,diwali,130.61,0.0,0
+2026-05-06T18:18:29.132476,0,I032,coconut,fruits,diwali,100.29,0.0,0
+2026-05-06T18:18:50.238262,0,I098,cereal,snacks,diwali,136.83,0.0,0
+2026-05-06T18:18:50.238276,0,I097,granola,snacks,diwali,136.33,0.0,0
+2026-05-06T18:18:50.238278,0,I096,dried fruit,snacks,diwali,136.33,0.0,0
+2026-05-06T18:18:50.238280,0,I094,popcorn,snacks,diwali,130.61,0.0,0
+2026-05-06T18:18:50.238281,0,I032,coconut,fruits,diwali,100.29,0.0,0
+2026-05-07T01:13:16.690734,1,I051,water,beverages,holi,350.25,0.0,0
+2026-05-07T01:13:16.690764,1,I060,smoothie,beverages,holi,347.0,0.0,0
+2026-05-07T01:13:16.690766,1,I057,sports drink,beverages,holi,318.76,0.0,0
+2026-05-07T01:13:16.690767,1,I032,coconut,fruits,holi,294.88,0.0,0
+2026-05-07T01:13:16.690769,1,I031,pomegranate,fruits,holi,172.96,0.0,0

@@ -1,5 +1,6 @@
-import pandas as pd
-df = pd.read_csv("logs/predictions.csv")
+from sklearn.preprocessing import LabelEncoder
+import joblib
 
-print(df.columns)
-print(df.head())
+encoder = joblib.load("data/new_featured/festival_encoder.pkl")
+festival_list = list(encoder.classes_)
+print(festival_list)

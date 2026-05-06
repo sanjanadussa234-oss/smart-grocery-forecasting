@@ -1,44 +1,69 @@
 import pandas as pd
 import numpy as np
+import os
 
 # =========================
-# LOAD PREDICTIONS
-# =========================
-pred = pd.read_csv("logs/predictions.csv")
-
-# Convert timestamp properly
-pred["timestamp"] = pd.to_datetime(pred["timestamp"])
-
-# =========================
-# SIMULATE ACTUAL SALES
+# CONFIG
 # =========================
 np.random.seed(42)
 
-actuals = pred.copy()
+files = [
+    ("logs/single_predictions.csv", "logs/single_actuals.csv"),
+    ("logs/festival_predictions.csv", "logs/festival_actuals.csv")
+]
 
-# Add realistic noise (+/- demand variation)
-actuals["actual_sales"] = actuals["predicted_demand"].apply(
-    lambda x: max(0, x + np.random.normal(0, 8))
-)
 
 # =========================
-# IMPORTANT FIX
+# PROCESS EACH FILE
 # =========================
-# Create SAME time_key as monitor.py
-actuals["time_key"] = actuals["timestamp"].dt.floor("h")
+for pred_file, actual_file in files:
 
-# Keep only required columns
-actuals = actuals[[
+    if not os.path.exists(pred_file):
+        print(f"⚠️ File not found: {pred_file}")
+        continue
+
+    print(f"\n📊 Processing {pred_file}")
+
+    pred = pd.read_csv(pred_file)
+
+    if len(pred) == 0:
+        print("⚠️ Empty file, skipping")
+        continue
+
+    pred["timestamp"] = pd.to_datetime(pred["timestamp"])
+
+    actuals = pred.copy()
+
+    # -------------------------
+    # Simulate actual sales
+    # -------------------------
+    actuals["actual_sales"] = actuals["predicted_demand"].apply(
+        lambda x: max(0, x + np.random.normal(0, 8))
+    )
+
+    # -------------------------
+    # time_key (CRITICAL FOR MLOPS)
+    # -------------------------
+    actuals["time_key"] = actuals["timestamp"].dt.floor("h")
+
+    # -------------------------
+    # Keep only required columns
+    # -------------------------
+    cols = [
     "timestamp",
     "time_key",
     "store_id",
     "item_id",
+    "item_name",
+    "category",
     "actual_sales"
-]]
+]
 
-# =========================
-# SAVE FILE
-# =========================
-actuals.to_csv("logs/actuals.csv", index=False)
+    actuals = actuals[[c for c in cols if c in actuals.columns]]
 
-print("✅ actuals.csv created successfully")
+    # -------------------------
+    # SAVE
+    # -------------------------
+    actuals.to_csv(actual_file, index=False)
+
+    print(f"✅ Saved: {actual_file}")
