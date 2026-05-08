@@ -52,3 +52,29 @@ timestamp,store_id,item_id,item_name,category,festival,predicted_demand,discount
 2026-05-07T01:13:16.690766,1,I057,sports drink,beverages,holi,318.76,0.0,0
 2026-05-07T01:13:16.690767,1,I032,coconut,fruits,holi,294.88,0.0,0
 2026-05-07T01:13:16.690769,1,I031,pomegranate,fruits,holi,172.96,0.0,0
+2026-05-07T10:14:38.252573,0,I098,cereal,snacks,christmas,126.97,0.0,0
+2026-05-07T10:14:38.252601,0,I097,granola,snacks,christmas,126.47,0.0,0
+2026-05-07T10:14:38.252603,0,I096,dried fruit,snacks,christmas,126.47,0.0,0
+2026-05-07T10:14:38.252604,0,I094,popcorn,snacks,christmas,120.75,0.0,0
+2026-05-07T10:14:38.252605,0,I043,curd,dairy,christmas,96.16,0.0,0
+2026-05-07T13:23:40.026411,4,I096,dried fruit,snacks,diwali,379.99,0.0,0
+2026-05-07T13:23:40.026452,4,I097,granola,snacks,diwali,344.27,0.0,0
+2026-05-07T13:23:40.026454,4,I094,popcorn,snacks,diwali,328.03,0.0,0
+2026-05-07T13:23:40.026455,4,I032,coconut,fruits,diwali,254.78,0.0,0
+2026-05-07T13:23:40.026456,4,I098,cereal,snacks,diwali,254.08,0.0,0
+2026-05-07T13:58:17.139754,5,I098,cereal,snacks,christmas,403.82,3.0,0
+2026-05-07T13:58:17.139807,5,I043,curd,dairy,christmas,326.95,3.0,0
+2026-05-07T13:58:17.139809,5,I100,pretzels,snacks,christmas,319.96,3.0,0
+2026-05-07T13:58:17.139810,5,I096,dried fruit,snacks,christmas,316.23,3.0,0
+2026-05-07T13:58:17.139812,5,I097,granola,snacks,christmas,309.39,3.0,0
+2026-05-07T13:58:17.139813,5,I094,popcorn,snacks,christmas,185.52,3.0,0
+2026-05-07T14:21:51.388053,0,I098,cereal,snacks,diwali,136.83,0.0,0
+2026-05-07T14:21:51.388099,0,I097,granola,snacks,diwali,136.33,0.0,0
+2026-05-07T14:21:51.388100,0,I096,dried fruit,snacks,diwali,136.33,0.0,0
+2026-05-07T14:21:51.388102,0,I094,popcorn,snacks,diwali,130.61,0.0,0
+2026-05-07T14:21:51.388103,0,I032,coconut,fruits,diwali,100.29,0.0,0
+2026-05-07T14:28:00.843540,5,I098,cereal,snacks,christmas,403.82,0.0,0
+2026-05-07T14:28:00.843565,5,I043,curd,dairy,christmas,326.95,0.0,0
+2026-05-07T14:28:00.843567,5,I096,dried fruit,snacks,christmas,316.23,0.0,0
+2026-05-07T14:28:00.843569,5,I097,granola,snacks,christmas,309.39,0.0,0
+2026-05-07T14:28:00.843570,5,I094,popcorn,snacks,christmas,185.52,0.0,0

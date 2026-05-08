@@ -1,7 +1,8 @@
 # ui/pages/manager_pages/single_prediction.py
 """
 Single Item Prediction Page
-Manager enters item details → calls /predict → sees demand → places order.
+Manager selects item from dropdown → calls /predict → sees demand → places order.
+FIXED PROPERLY: Item dropdown now updates correctly based on category
 """
 
 import streamlit as st
@@ -16,7 +17,7 @@ sys.path.insert(0, str(_UI_DIR / "pages"))
 
 from utils.api_client import predict_single
 from utils.orders_db  import create_order
-from utils.config     import CATEGORIES, FESTIVALS, FESTIVAL_EMOJIS, STORE_NAMES
+from utils.config     import CATEGORIES, FESTIVALS, FESTIVAL_EMOJIS, STORE_NAMES, ITEMS_BY_CATEGORY
 
 
 # ── constants ─────────────────────────────────────────────────────────────────
@@ -53,34 +54,58 @@ def show():
 
     st.divider()
 
-    # ── input form ────────────────────────────────────────────────────────────
+    # ── MOVED CATEGORY AND ITEM OUTSIDE FORM ────────────────────────────────
+    # This is the KEY FIX: selectors MUST be outside the form for dynamic updates
+    st.markdown("#### 📝 Item Details")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Category selector - OUTSIDE FORM
+        selected_category = st.selectbox(
+            "Category *",
+            CATEGORIES,
+            index=0,
+            help="Select the product category",
+        )
+        
+        # Item selector - OUTSIDE FORM - dynamically updates based on category
+        items_in_category = ITEMS_BY_CATEGORY.get(selected_category, [])
+        
+        if items_in_category:
+            selected_item = st.selectbox(
+                "Item Name *",
+                items_in_category,
+                index=0,
+                help="Name of the grocery item",
+            )
+        else:
+            st.error("No items available for this category")
+            selected_item = None
+    
+    with col2:
+        festival_options = [f"{FESTIVAL_EMOJIS[f]} {f.title()}" for f in FESTIVALS]
+        festival_display = st.selectbox(
+            "Festival / Occasion",
+            festival_options,
+            index=FESTIVALS.index("none"),
+        )
+        selected_festival = FESTIVALS[festival_options.index(festival_display)]
+
+    st.divider()
+
+    # ── input form (NOW WITHOUT CATEGORY AND ITEM) ──────────────────────────
     with st.form("single_prediction_form", clear_on_submit=False):
-        st.markdown("#### 📝 Item Details")
+        st.markdown("#### ⚙️ Additional Settings")
 
         col1, col2 = st.columns(2)
         with col1:
-            item_name = st.text_input(
-                "Item Name *",
-                placeholder="e.g. Basmati Rice",
-                help="Name of the grocery item",
-            )
-            category = st.selectbox("Category *", CATEGORIES)
             prediction_date = st.date_input(
                 "Prediction Date *",
                 value=date.today() + timedelta(days=1),
                 min_value=date.today(),
                 help="Date you want demand for",
             )
-
-        with col2:
-            festival_options = [f"{FESTIVAL_EMOJIS[f]} {f.title()}" for f in FESTIVALS]
-            festival_display = st.selectbox(
-                "Festival / Occasion",
-                festival_options,
-                index=FESTIVALS.index("none"),
-            )
-            # strip emoji back to raw festival key
-            festival = FESTIVALS[festival_options.index(festival_display)]
 
             current_stock = st.number_input(
                 "Current Stock (units)",
@@ -90,6 +115,8 @@ def show():
                 step=1.0,
                 help="Current stock level for this item",
             )
+
+        with col2:
             discount_pct = st.slider(
                 "Discount (%)",
                 min_value=0,
@@ -108,17 +135,17 @@ def show():
 
     # ── prediction result ─────────────────────────────────────────────────────
     if submitted:
-        if not item_name.strip():
-            st.error("❌ Please enter an item name")
+        if not selected_item or selected_item is None:
+            st.error("❌ Please select a valid item")
             return
 
         with st.spinner("🤖 Calling prediction model..."):
             result = predict_single(
                 store_id      = store_id,
-                item_name     = item_name.strip(),
-                category      = category,
+                item_name     = selected_item.strip(),
+                category      = selected_category,
                 current_stock = float(current_stock),
-                festival      = festival,
+                festival      = selected_festival,
                 has_discount  = discount_pct > 0,
                 discount_pct  = float(discount_pct),
                 has_promotion = has_promotion,
@@ -132,9 +159,9 @@ def show():
 
         # ── store result in session for the order form below ──────────────
         st.session_state["last_prediction"] = {
-            "item_name":        item_name.strip(),
-            "category":         category,
-            "festival":         festival,
+            "item_name":        selected_item.strip(),
+            "category":         selected_category,
+            "festival":         selected_festival,
             "prediction_date":  prediction_date.isoformat(),
             "predicted_demand": result.get("predicted_demand", 0),
             "base_price":       _DEFAULT_UNIT_PRICE,
